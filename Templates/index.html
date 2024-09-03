@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Song Recommendations</title>
+    <style>
+            /* Reset default margins and paddings */
+            body, h1, h2, h3, ul, li {
+                margin: 0;
+                padding: 0;
+                list-style: none;
+            }
+
+            /* Set overall body styles */
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f0f8ff; /* Light blue background */
+                color: #333; /* Dark text color */
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+            }
+
+            /* Style the container to center content */
+            .container {
+                text-align: center;
+                width: 90%;
+                max-width: 600px;
+                padding: 20px;
+                background-color: #ffffff; /* White background for container */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+                border-radius: 10px;
+            }
+
+            /* Title styling */
+            h1 {
+                color: #007bff; /* Blue color for title */
+                margin-bottom: 20px;
+            }
+
+            /* Label styling */
+            label {
+                display: block;
+                margin-bottom: 10px;
+                font-weight: bold;
+                color: #555;
+            }
+
+            /* Input field styling */
+            input[type="text"] {
+                width: 80%;
+                padding: 10px;
+                margin-bottom: 20px;
+                border: 1px solid #007bff;
+                border-radius: 5px;
+            }
+
+            /* Button styling */
+            button {
+                background-color: #007bff; /* Blue button color */
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+            }
+
+            /* Button hover effect */
+            button:hover {
+                background-color: #0056b3; /* Darker blue on hover */
+            }
+
+            /* Flash messages styling */
+            ul {
+                list-style: none;
+                margin-top: 20px;
+            }
+
+            li {
+                background-color: #ffcccc;
+                color: #900;
+                padding: 10px;
+                margin-bottom: 10px;
+                border-radius: 5px;
+            }
+
+            /* Styling for recommended songs section */
+            h2, h3 {
+                margin-top: 20px;
+                color: #007bff;
+            }
+
+            ul {
+                padding-left: 20px;
+                text-align: left;
+            }
+
+            li {
+                color: #333;
+                padding: 5px;
+                margin-bottom: 5px;
+                background-color: #e6f7ff; /* Light blue background for list items */
+                border-radius: 5px;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Spotify Song Recommendations</h1>
+        <form method="POST">
+            <label for="song_name">Enter a song name with the artist:</label>
+            <input type="text" id="song_name" name="song_name" required onkeyup="showSuggestions(this.value)">
+            <div id="suggestions" class="autocomplete-suggestions"></div>
+            <button type="submit">Find Recommendations</button>
+        </form>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        {% if song_title and artist %}
+            <h2>Song Found: {{ song_title }} by {{ artist }}</h2>
+            <h3>Recommended Songs:</h3>
+            <ul>
+            {% for recommendation in recommendations %}
+                <li>{{ recommendation[0] }} by {{ recommendation[1] }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <script>
+        // Function to fetch and display autocomplete suggestions
+        function showSuggestions(query) {
+            if (query.length == 0) {
+                document.getElementById('suggestions').innerHTML = '';
+                return;
+            }
+
+            fetch(`/autocomplete?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    let suggestionBox = document.getElementById('suggestions');
+                    suggestionBox.innerHTML = ''; // Clear previous suggestions
+
+                    data.forEach(suggestion => {
+                        let suggestionItem = document.createElement('li');
+                        suggestionItem.textContent = `${suggestion[1]} by ${suggestion[2]}`;
+                        suggestionItem.onclick = () => {
+                            document.getElementById('song_name').value = `${suggestion[1]} by ${suggestion[2]}`;
+                            suggestionBox.innerHTML = ''; // Clear suggestions on selection
+                        };
+                        suggestionBox.appendChild(suggestionItem);
+                    });
+                })
+                .catch(error => console.error('Error fetching autocomplete suggestions:', error));
+        }
+    </script>
+</body>
+</html>
